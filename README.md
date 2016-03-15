@@ -5,6 +5,7 @@ server provisioning with php
 Instructions to execute it
 
 Clone a content of repo or download a zip file to the relevant ansible installed server.
+
 If you download a zip file unzip it and go inside of the folder (server-provisioning-php-master).
 Then open the "hosts" file and add IP address of the relevant server.
 Then edit "ansible_ssh_user=" field with relevant username.
