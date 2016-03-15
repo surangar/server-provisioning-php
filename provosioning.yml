@@ -1,0 +1,67 @@
+---
+- hosts: php
+  sudo: yes
+
+######################################################
+
+  tasks:
+
+  - name: install packages
+    apt: name={{ item }} update_cache=yes state=latest
+    with_items:
+      - git
+      - mcrypt
+      - nginx
+      - php5-cli
+      - php5-curl
+      - php5-fpm
+      - php5-intl
+      - php5-json
+      - php5-mcrypt
+      - php5-sqlite
+      - sqlite3
+
+######################################################
+
+  - name: make php to listen on port 9000
+    lineinfile: dest=/etc/php5/fpm/pool.d/www.conf  regexp='^(.*)listen = /var/run/php5-fpm.sock' line=listen=127.0.0.1:9000
+    notify:
+      - restart php5-fpm
+      - restart nginx
+
+######################################################
+
+  - name: enable php5 mcrypt module
+    shell: php5enmod mcrypt
+    args:
+      creates: /etc/php5/cli/conf.d/20-mcrypt.ini
+
+######################################################
+
+  - name: create var/www/phpinfo directory
+    file: dest=/var/www/phpinfo state=directory
+
+######################################################
+
+  - name: Copy index.php file to /var/vww/phpinfo folder
+    template: src=index.php dest=/var/www/phpinfo/index.php owner=www-data group=www-data mode=0775
+
+######################################################
+
+  - name: Configure nginx vhost
+    template: src=nginx-vhost dest=/etc/nginx/sites-available/phpinfo.ssr.com owner=root group=root
+    
+  - name: Create symbolic Link
+    file: src=/etc/nginx/sites-available/phpinfo.ssr.com dest=/etc/nginx/sites-enabled/phpinfo.ssr.com owner=root group=root state=link
+    notify:
+      - restart php5-fpm
+      - restart nginx
+
+######################################################
+
+  handlers:
+    - name: restart php5-fpm
+      service: name=php5-fpm state=restarted
+
+    - name: restart nginx
+      service: name=nginx state=restarted
